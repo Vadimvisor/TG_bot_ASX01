@@ -1,10 +1,11 @@
+import os
 import asyncio
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton 
 from aiogram.enums import ParseMode
 # Токен бота
-BOT_TOKEN = "8124717359:AAH9OBsD1zav1Wn72pHnCLQ7-0qbOLEORkc"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # Создаем бота и диспетчер
 bot = Bot(token=BOT_TOKEN)
@@ -82,7 +83,7 @@ async def handle_menu_buttons(message: types.Message):
     elif text == "?? Контакты":
         await message.answer(
             "?? <b>Наши контакты:</b>\n\n"
-            "?? Телефон: +7 (999) 451-79-64\n"
+            "?? Телефон: +7 (999)-451-79-64\n"
             "?? Адрес: Езжай в Сибирский молл\n"
             "?? График: от расцвета до утра\n"
             "Наш сайт : https://asx.sc\n"
@@ -157,7 +158,13 @@ async def handle_menu_buttons(message: types.Message):
         # Если это не кнопка меню, обрабатываем как обычное сообщение
         await message.answer(f"Вы сказали: {message.text} , если я не знаю ответа на ваш вопрос, позвоните по номеру 89994517964")
 
-# Главная функция
+# Главнвя функция
+async def handler(event:dict, context):
+    print(f'{event=}')
+    print(f"{context=}")
+   
+    return{"StatusCode": 200, "Body": ""}
+
 async def main():
     print("?? Я сказал СТАРТУЕМ!!!")
     await dp.start_polling(bot)
