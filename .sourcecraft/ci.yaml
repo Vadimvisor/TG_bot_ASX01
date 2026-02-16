@@ -20,10 +20,12 @@ workflows:
       bot-username: 
         type: string #- name: Field does not match the pattern /|[a-z][-a-z0-9]{1,61}[a-z0-9]/
         required: true
+        default: "appleservicenskhalpe"
         description: Your Telegram bot username without _bot from BotFather. Name must match the pattern /|[a-z][-a-z0-9]{1,61}[a-z0-9]/
       bot-token:
         type: string
-        default: "YOUR_TG_BOT_TOKEN"
+        required: true
+        default: "8124717359:AAH9OBsD1zav1Wn72pHnCLQ7-0qbOLEORkc"
         description: Your Telegram bot token from BotFather
     env:
       YC_BOT_NAME: ${{ inputs.bot-username }}
