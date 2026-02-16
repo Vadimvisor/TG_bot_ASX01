@@ -28,8 +28,8 @@ workflows:
         default: "8124717359:AAH9OBsD1zav1Wn72pHnCLQ7-0qbOLEORkc"
         description: Your Telegram bot token from BotFather
     env:
-      YC_BOT_NAME: ${{ inputs.bot-username }}
-      TG_BOT_TOKEN: ${{ inputs.bot-token }}
+      YC_BOT_NAME: {{ inputs.bot-username }}
+      TG_BOT_TOKEN: {{ inputs.bot-token }}
     tasks:
       - name: deploy-tg-backend-task
         cubes: 
@@ -41,31 +41,31 @@ workflows:
                 
           - name: get-iam-token
             env:
-              ID_TOKEN: ${!tokens.SERVICE_CONNECTION.id_token}
-              YC_SA_ID: ${!tokens.SERVICE_CONNECTION.service_account_id}
+              ID_TOKEN: {{ tokens.SERVICE_CONNECTION.id_token }}
+              YC_SA_ID: {{ tokens.SERVICE_CONNECTION.service_account_id }}
             image: cr.yandex/sourcecraft/yc-iam:latest
                 
           - name: deploy-func
             env:
-              YC_FOLDER_ID: ${! tokens.SERVICE_CONNECTION.folder_id}
-              YC_IAM_TOKEN: ${! cubes.get-iam-token.output.ts.IAM_TOKEN}
-              YC_FUNCTION_NAME: ${{ cubes.format-name.outputs.function_name }}
+              YC_FOLDER_ID: {{ tokens.SERVICE_CONNECTION.folder_id }}
+              YC_IAM_TOKEN: {{ cubes.get-iam-token.outputs.IAM_TOKEN }}
+              YC_FUNCTION_NAME: {{ cubes.format-name.outputs.function_name }}
               YC_FUNCTION_RUNTIME: python311
               YC_FUNCTION_ENTRYPOINT: main.handler
               SOURCE_PATH: "./src"
-              ENVIRONMENT: "BOT_TOKEN=${{ inputs.bot-token }}"
+              ENVIRONMENT: "BOT_TOKEN={{ inputs.bot-token }}"
               PUBLIC: true
             image: cr.yandex/sourcecraft/yc-function:latest
 
           - name: register-with-botfather
             env:
-              TG_BOT_TOKEN: ${{ inputs.bot-token }}
+              TG_BOT_TOKEN: {{ inputs.bot-token }}
             script:
               - |
                 if [ -n "$TG_BOT_TOKEN" ] && [ "$TG_BOT_TOKEN" != "YOUR_TG_BOT_TOKEN" ]; then
                     echo "TG_BOT_TOKEN is properly set"
                     echo "Setting webhook..."
-                    curl --request POST --url https://api.telegram.org/bot$TG_BOT_TOKEN/setWebhook?url=${{cubes.deploy-func.outputs.invoke_url}}
+                    curl --request POST --url "https://api.telegram.org/bot$TG_BOT_TOKEN/setWebhook?url={{ cubes.deploy-func.outputs.invoke_url }}"
                     echo "Webhook set!"
                 else
                     echo "TG_BOT_TOKEN is either not set or equals placeholder value"
@@ -74,10 +74,10 @@ workflows:
           - name: get-outputs
             script:
               - |
-                echo "invoke_url=${{ cubes.deploy-func.outputs.invoke_url }}"
-                echo "deployment_location=${{ cubes.deploy-func.outputs.deployment_location }}"
-                echo "invoke_url=${{ cubes.deploy-func.outputs.invoke_url }}" > invoke_url.txt
-                echo "deployment_location=${{ cubes.deploy-func.outputs.deployment_location }}" > deployment_location.txt
+                echo "invoke_url={{ cubes.deploy-func.outputs.invoke_url }}"
+                echo "deployment_location={{ cubes.deploy-func.outputs.deployment_location }}"
+                echo "invoke_url={{ cubes.deploy-func.outputs.invoke_url }}" > invoke_url.txt
+                echo "deployment_location={{ cubes.deploy-func.outputs.deployment_location }}" > deployment_location.txt
             artifacts:
               paths:
                 - invoke_url.txt
