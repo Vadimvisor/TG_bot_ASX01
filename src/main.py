@@ -1,9 +1,12 @@
 import os
 import asyncio
+import json
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton 
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, Update
 from aiogram.enums import ParseMode
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
 # Токен бота
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -147,7 +150,7 @@ async def handle_menu_buttons(message: types.Message):
     elif text == "?? купить технику Apple":
         await message.answer(
             "?? <b>Какая техника у нас есть:</b>\n\n"
-            "1. Iphone с 16 до 17 pro max любая модель, с любым объёмом памяти\n"
+            "1. Iphone с 15 до 17 pro max любая модель, с любым объёмом памяти\n"
             "2. Наушники Air pods/ Air pods pro\n"
             "3. Apple Watch\n"
             "4. Mac book / Imac",
@@ -159,16 +162,40 @@ async def handle_menu_buttons(message: types.Message):
         await message.answer(f"Вы сказали: {message.text} , если я не знаю ответа на ваш вопрос, позвоните по номеру 89994517964")
 
 # Главнвя функция
-async def handler(event:dict, context):
-    print(f'{event=}')
-    print(f"{context=}")
-   
-    return{"StatusCode": 200, "Body": ""}
-
-async def main():
-    print("?? Я сказал СТАРТУЕМ!!!")
-    await dp.start_polling(bot)
-
-# Запуск
-if __name__ == "__main__":
-    asyncio.run(main())
+async def handler(event, context):
+    """
+    Функция-обработчик для Yandex Cloud Functions
+    """
+    try:
+        # Парсим входящий запрос от Telegram
+        if isinstance(event, dict):
+            # В Yandex Cloud тело запроса может быть в разных полях
+            body = event.get('body', '')
+            if isinstance(body, str):
+                update_data = json.loads(body)
+            else:
+                update_data = body
+        else:
+            update_data = json.loads(event)
+        
+        # Создаем объект Update из данных
+        update = Update(**update_data)
+        
+        # Передаем обновление диспетчеру
+        await dp.feed_update(bot, update)
+        
+        # Возвращаем успешный ответ
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({'ok': True})
+        }
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+# залупа тигра
