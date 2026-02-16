@@ -2,7 +2,7 @@ on:
   push:
     - workflows: deploy-tg-bot-workflow
       filter: 
-        branches: ["master", "main"]
+        branches: ["main"]
   pull_request:
     - workflows: deploy-tg-bot-workflow
       filter:
@@ -10,18 +10,18 @@ on:
         target_branches: "main"
 
 tokens:
-  SERVICE_CONNECTION_WITH_TOKEN:
-    service_connection: "default-service-connection"
+  SERVICE_CONNECTION:
+    service_connection: default-service-connection
     scope: org
 
 workflows:
   deploy-tg-bot-workflow:
     inputs:
-      bot-username: 
-        type: string #- name: Field does not match the pattern /|[a-z][-a-z0-9]{1,61}[a-z0-9]/
+      bot-username:
+        type: string
         required: true
         default: "appleservicenskhalpe"
-        description: Your Telegram bot username without _bot from BotFather. Name must match the pattern /|[a-z][-a-z0-9]{1,61}[a-z0-9]/
+        description: Your Telegram bot username without _bot from BotFather
       bot-token:
         type: string
         required: true
@@ -39,11 +39,16 @@ workflows:
                 func_name=$(echo "$YC_BOT_NAME" | tr '[:upper:]' '[:lower:]' | tr -d '_')
                 echo "function_name=$func_name" >> $SOURCECRAFT_OUTPUT
                 
+          - name: get-iam-token
+            env:
+              ID_TOKEN: ${! tokens.SERVICE_CONNECTION.id_token %}
+              YC_SA_ID: ${! tokens.SERVICE_CONNECTION.service_account_id %}
+            image: cr.yandex/sourcecraft/yc-iam:latest
+                
           - name: deploy-func
             env:
-              ID_TOKEN: ${{ tokens.SERVICE_CONNECTION_WITH_TOKEN.id_token }}
-              YC_SA_ID: ${{ tokens.SERVICE_CONNECTION_WITH_TOKEN.service_account_id }}  
-              YC_FOLDgit push origin mainER_ID: ${{ tokens.SERVICE_CONNECTION_WITH_TOKEN.folder_id }} 
+              YC_FOLDER_ID: ${! tokens.SERVICE_CONNECTION.folder_id %}
+              YC_IAM_TOKEN: ${! cubes.get-iam-token.output.ts.IAM_TOKEN %}
               YC_FUNCTION_NAME: ${{ cubes.format-name.outputs.function_name }}
               YC_FUNCTION_RUNTIME: python311
               YC_FUNCTION_ENTRYPOINT: main.handler
@@ -57,7 +62,6 @@ workflows:
               TG_BOT_TOKEN: ${{ inputs.bot-token }}
             script:
               - |
-                # Check if TG_BOT_TOKEN is set and not equal to placeholder
                 if [ -n "$TG_BOT_TOKEN" ] && [ "$TG_BOT_TOKEN" != "YOUR_TG_BOT_TOKEN" ]; then
                     echo "TG_BOT_TOKEN is properly set"
                     echo "Setting webhook..."
