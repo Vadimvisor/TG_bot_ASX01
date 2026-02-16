@@ -41,14 +41,14 @@ workflows:
                 
           - name: get-iam-token
             env:
-              ID_TOKEN: ${! tokens.SERVICE_CONNECTION.id_token %}
-              YC_SA_ID: ${! tokens.SERVICE_CONNECTION.service_account_id %}
+              ID_TOKEN: ${!tokens.SERVICE_CONNECTION.id_token}
+              YC_SA_ID: ${!tokens.SERVICE_CONNECTION.service_account_id}
             image: cr.yandex/sourcecraft/yc-iam:latest
                 
           - name: deploy-func
             env:
-              YC_FOLDER_ID: ${! tokens.SERVICE_CONNECTION.folder_id %}
-              YC_IAM_TOKEN: ${! cubes.get-iam-token.output.ts.IAM_TOKEN %}
+              YC_FOLDER_ID: ${! tokens.SERVICE_CONNECTION.folder_id}
+              YC_IAM_TOKEN: ${! cubes.get-iam-token.output.ts.IAM_TOKEN}
               YC_FUNCTION_NAME: ${{ cubes.format-name.outputs.function_name }}
               YC_FUNCTION_RUNTIME: python311
               YC_FUNCTION_ENTRYPOINT: main.handler
