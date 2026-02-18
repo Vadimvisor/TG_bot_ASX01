@@ -1,3 +1,4 @@
+from aiogram.types import Update
 import os
 import asyncio
 import json
@@ -23,12 +24,16 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 # Создаем меню с кнопками
+
+
 def get_main_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="📞 Контакты"), KeyboardButton(text="ℹ️ О нас")],
+            [KeyboardButton(text="📞 Контакты"),
+             KeyboardButton(text="ℹ️ О нас")],
             [KeyboardButton(text="💰 Цены"), KeyboardButton(text="🛠️ Услуги")],
-            [KeyboardButton(text="🎁 Акции"), KeyboardButton(text="📝 Записаться")],
+            [KeyboardButton(text="🎁 Акции"),
+             KeyboardButton(text="📝 Записаться")],
             [KeyboardButton(text="🍏 купить технику Apple")]
         ],
         resize_keyboard=True,
@@ -37,6 +42,8 @@ def get_main_menu():
     return keyboard
 
 # Команда /start
+
+
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     user = message.from_user
@@ -48,6 +55,8 @@ async def start_command(message: types.Message):
     )
 
 # Команда /menu
+
+
 @dp.message(Command("menu"))
 async def menu_command(message: types.Message):
     await message.answer(
@@ -56,6 +65,8 @@ async def menu_command(message: types.Message):
     )
 
 # Команда /help
+
+
 @dp.message(Command("help"))
 async def help_command(message: types.Message):
     await message.answer(
@@ -67,6 +78,8 @@ async def help_command(message: types.Message):
     )
 
 # Команда /hide
+
+
 @dp.message(Command("hide"))
 async def hide_menu(message: types.Message):
     await message.answer(
@@ -75,10 +88,12 @@ async def hide_menu(message: types.Message):
     )
 
 # Обработка кнопок меню
+
+
 @dp.message()
 async def handle_menu_buttons(message: types.Message):
     text = message.text
-    
+
     if text == "📞 Контакты":
         await message.answer(
             "📞 <b>Наши контакты:</b>\n\n"
@@ -89,7 +104,7 @@ async def handle_menu_buttons(message: types.Message):
             "📧 Email: asx.com",
             parse_mode="HTML"
         )
-    
+
     elif text == "ℹ️ О нас":
         await message.answer(
             "ℹ️ <b>О нашей компании:</b>\n\n"
@@ -99,7 +114,7 @@ async def handle_menu_buttons(message: types.Message):
             "Даём гарантию на работу и запчасти",
             parse_mode="HTML"
         )
-    
+
     elif text == "💰 Цены":
         await message.answer(
             "💰 <b>Наши цены:</b>\n\n"
@@ -110,7 +125,7 @@ async def handle_menu_buttons(message: types.Message):
             "🎁 Есть скидки постоянным клиентам!",
             parse_mode="HTML"
         )
-    
+
     elif text == "🛠️ Услуги":
         await message.answer(
             "🛠️ <b>Наши услуги:</b>\n\n"
@@ -120,7 +135,7 @@ async def handle_menu_buttons(message: types.Message):
             "Что интересует?",
             parse_mode="HTML"
         )
-    
+
     elif text == "🎁 Акции":
         await message.answer(
             "🎁 <b>Текущие акции:</b>\n\n"
@@ -131,7 +146,7 @@ async def handle_menu_buttons(message: types.Message):
             "Акции действуют до конца месяца!",
             parse_mode="HTML"
         )
-    
+
     elif text == "📝 Записаться":
         await message.answer(
             "📝 <b>Запись на ремонт:</b>\n\n"
@@ -142,7 +157,7 @@ async def handle_menu_buttons(message: types.Message):
             "Или позвоните: +7 (999) 451-79-64",
             parse_mode="HTML"
         )
-    
+
     elif text == "🍏 купить технику Apple":
         await message.answer(
             "🍏 <b>Техника Apple в наличии:</b>\n\n"
@@ -152,7 +167,7 @@ async def handle_menu_buttons(message: types.Message):
             "4. MacBook / iMac",
             parse_mode="HTML"
         )
-    
+
     else:
         await message.answer(
             f"Вы сказали: {message.text}\n\n"
@@ -160,6 +175,8 @@ async def handle_menu_buttons(message: types.Message):
         )
 
 # ОСНОВНАЯ ФУНКЦИЯ ДЛЯ YANDEX CLOUD
+
+
 async def handler(event, context):
     """
     Функция-обработчик для Yandex Cloud Functions
@@ -167,7 +184,7 @@ async def handler(event, context):
     """
     try:
         logger.info(f"Received event: {json.dumps(event)[:200]}...")
-        
+
         # Извлекаем тело запроса в зависимости от типа события
         if isinstance(event, dict):
             # Проверяем, есть ли httpMethod (это API Gateway запрос)
@@ -182,21 +199,21 @@ async def handler(event, context):
                 body = event.get('body', event)
         else:
             body = event
-        
+
         # Парсим JSON
         if isinstance(body, str):
             update_data = json.loads(body)
         else:
             update_data = body
-        
+
         logger.info(f"Parsed update data: {json.dumps(update_data)[:200]}...")
-        
+
         # Создаем объект Update с помощью model_validate (aiogram 3.x)
         update = Update.model_validate(update_data)
-        
+
         # Передаем обновление диспетчеру
         await dp.feed_update(bot, update)
-        
+
         # Возвращаем успешный ответ
         return {
             'statusCode': 200,
@@ -205,7 +222,7 @@ async def handler(event, context):
             },
             'body': json.dumps({'ok': True})
         }
-        
+
     except Exception as e:
         logger.error(f"Error processing update: {e}", exc_info=True)
         return {
@@ -217,5 +234,5 @@ async def handler(event, context):
 if __name__ == "__main__":
     async def test():
         await dp.start_polling(bot)
-    
+
     asyncio.run(test())
